@@ -178,3 +178,4 @@ while True:
         logging.error(traceback.format_exc())
         pass
     time.sleep(60/RECORD_RATE)
+    
