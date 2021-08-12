@@ -7,6 +7,7 @@
 # - start running this script BEFORE pressing the macro on UGS
 # - if you want to change the upper resistance value before halting, change [BROKEN_BOUND] to the desired resistance, in ohms
 
+# see documentation for attributes. 
 import serial
 import time
 import os
@@ -25,6 +26,7 @@ RECORD_RATE = 200 #data points per min
 BROKEN_CONDUCTOR_TOL = 0.15 #ohms
 CYCLE_TOL = 1
 
+# self is not a keyword.
 class Calibration:
     lower = []
     upper = []
@@ -32,16 +34,19 @@ class Calibration:
         self.lower = a1
         self.upper = a2
 
-#calibration are defined as: [first_voltage, first_target], [second_voltage, second_target]
+# restistance calibration is defined as: [first_voltage, first_target(resistance)], [second_voltage, second_target(resitance)]
 resistance_calibration = Calibration([-5.9985, 10.006],  [-9.6143, .964])
+# restistance calibration is defined as: [first_voltage, first_target(distance)], [second_voltage, second_target(distance)]
 stretch_calibration = Calibration([0.793, 13.5],[1.126, 20])
 
+# grabbing the index of the ordered pairs above, and converting from analog voltage to desired unit.
 def transfer_units(cal, v):
     target_diff = cal.upper[1]-cal.lower[1]
     base_diff =  cal.upper[0]-cal.lower[0]
     ratio = target_diff / base_diff
     return (v - cal.lower[0]) * ratio + cal.lower[1]
 
+# I don't understand the pySerial Library. All I know is that it can manipulate data coming to and from serial ports.
 serDataq = serial.Serial(DATAQ_PORT)
 serArduino = serial.Serial(
     port = ARDUINO_PORT,\
@@ -52,10 +57,10 @@ serArduino = serial.Serial(
     timeout = 0)
 serArduino.flushInput()
 
-serDataq.write(b"stop\r")        #stop in case device was left scanning
+serDataq.write(b"stop\r")        # stop in case device was left scanning
 serDataq.write(b"eol 1\r")
-serDataq.write(b"encode 1\r")    #set up the device for ascii mode
-serDataq.write(b"slist 0 0\r")   #scan list position 0 channel 0 thru channel 7
+serDataq.write(b"encode 1\r")    # set up the device for ascii mode
+serDataq.write(b"slist 0 0\r")   # scan list position 0 channel 0 thru channel 7
 serDataq.write(b"slist 1 1\r")
 serDataq.write(b"slist 2 2\r")
 serDataq.write(b"slist 3 3\r")
@@ -67,12 +72,13 @@ serDataq.write(b"srate 6000\r")
 serDataq.write(b"dec 500\r")
 serDataq.write(b"deca 3\r")
 time.sleep(1)  
-serDataq.read_all()              #flush all command responses
-serDataq.write(b"start\r")           #start scanning
+serDataq.read_all()              # flush all command responses
+serDataq.write(b"start\r")           # start scanning
 
 print("Please enter the name of this test (this will be used to title the .csv output):")
 FILENAME = input()
 
+# I think you need the os module to access the os and create a .csv file within the computer(logging might play a part in this process).
 if os.path.exists(f"{FILENAME}.csv"):
     os.remove(f"{FILENAME}.csv")
    
@@ -81,7 +87,7 @@ with open(f"{FILENAME}.csv", "a") as f:
     writer.writerow(["Time (seconds)", "cycle #", "Resistance (ohms)", "length of sample (cm)"])
    
 
-prev_direction = False #false represents downward motion. true represents upward motion
+prev_direction = False # false represents downward motion. true represents upward motion
 current_direction = False
 previous_stretch = 0.
 cycles = 0.
@@ -96,7 +102,7 @@ def print_info():
     for i in range(conductors_broken):
         print(f"Conductor {i+1} broke at {broken_info[i+1]['cycle']} cycles, reaching {broken_info[i+1]['resistance']} ohms.")
    
-#polling a few times to get rid of strange datapoints
+# polling a few times to get rid of strange datapoints
 print("initializing...")
 for i in range(6):
     j = serDataq.inWaiting()
@@ -116,7 +122,7 @@ while True:
             stretch_voltage = line.split(",")[1]
             stretch = transfer_units(stretch_calibration, float(stretch_voltage))
            
-            #check if conductor has broken
+            # check if conductor has broken
             resistance_diff = resistance - max_resistance
             if resistance_diff > BROKEN_CONDUCTOR_TOL:
                 if cycles > cycle_of_last_broken + CYCLE_TOL :
@@ -145,12 +151,12 @@ while True:
                 prev_direction = current_direction
             if float(resistance) > BROKEN_BOUND:
                
-                #send message to stop running
+                # send message to stop running
                 serArduino.write(b"stop")
                 time.sleep(0.1)
                 serArduino.write(b"stop")
                 time.sleep(0.1)
-                #wait for confirmation
+                # wait for confirmation
                 while True:
                     if(serArduino.in_waiting > 0):
                         serialString = serArduino.readline()
