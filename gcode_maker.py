@@ -58,7 +58,7 @@ else:
             estimated_time /= 60
             #change to days if too long
             if estimated_time > 50:
-                estimated_time /=24
+                estimated_time /= 24
                 print(f"{bcolors.OKCYAN}estimated job duration: {estimated_time:.2f} days{bcolors.ENDC}")
             else:
                 print(f"{bcolors.OKCYAN}estimated job duration: {estimated_time:.2f} hours{bcolors.ENDC}")
