@@ -44,12 +44,12 @@ def transfer_units(cal, v):
 
 serDataq = serial.Serial(DATAQ_PORT)
 serArduino = serial.Serial(
-    port=ARDUINO_PORT,\
-    baudrate=115200,\
-    parity=serial.PARITY_NONE,\
-    stopbits=serial.STOPBITS_ONE,\
-    bytesize=serial.EIGHTBITS,\
-    timeout=0)
+    port = ARDUINO_PORT,\
+    baudrate = 115200,\
+    parity = serial.PARITY_NONE,\
+    stopbits = serial.STOPBITS_ONE,\
+    bytesize = serial.EIGHTBITS,\
+    timeout = 0)
 serArduino.flushInput()
 
 serDataq.write(b"stop\r")        #stop in case device was left scanning
@@ -108,7 +108,7 @@ for i in range(6):
 start_time = time.time()
 while True:
     try:
-        i= serDataq.inWaiting()
+        i = serDataq.inWaiting()
         if i>0:
             line = serDataq.readline().decode("utf-8")
             resistance_voltage = line.split(",")[0]
@@ -165,7 +165,7 @@ while True:
                     f.write(f"Conductor broke after: {cycles} cycles.")
                 break
             with open(f"{FILENAME}.csv", "a") as f:
-                writer = csv.writer(f, delimiter=",")
+                writer = csv.writer(f, delimiter = ",")
                 writer.writerow([time.time() - start_time, cycles, resistance, stretch])
         pass
     except Exception as e:
